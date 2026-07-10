@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile2 Doyumwhan Metin Sayacı</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header>
+        <div class="header-title">
+            <h1>Doyumwhan Timers</h1>
+            <span class="sub-title">Shinsoo (Kırmızı Bayrak) Bölgesi</span>
+        </div>
+        <div class="controls">
+            <button id="btn-audio" class="control-btn" onclick="toggleAudio()">🔊 Ses Açık</button>
+            <button id="btn-noti" class="control-btn" onclick="requestNotificationPermission()">🔔 Bildirim İzni</button>
+        </div>
+    </header>
+
+    <nav class="ch-nav">
+        <button class="ch-btn active" onclick="switchCH(1)">CH 1</button>
+        <button class="ch-btn" onclick="switchCH(2)">CH 2</button>
+        <button class="ch-btn" onclick="switchCH(3)">CH 3</button>
+        <button class="ch-btn" onclick="switchCH(4)">CH 4</button>
+        <button class="ch-btn" onclick="switchCH(5)">CH 5</button>
+        <button class="ch-btn" onclick="switchCH(6)">CH 6</button>
+    </nav>
+
+    <main class="zones-container">
+        <div class="zone-card" id="zone-isinlayici">
+            <div class="zone-header">
+                <span class="status-indicator"></span>
+                <h2>1 - Işınlayıcı</h2>
+            </div>
+            <div class="timer-display">15:00</div>
+            <div class="time-adjusters">
+                <button onclick="adjustTime('isinlayici', -30)">-30sn</button>
+                <button onclick="adjustTime('isinlayici', 30)">+30sn</button>
+            </div>
+            <button class="action-btn" onclick="cutMetin('isinlayici')">KESTİM!</button>
+        </div>
+
+        <div class="zone-card" id="zone-orta">
+            <div class="zone-header">
+                <span class="status-indicator"></span>
+                <h2>2 - Orta Bölge</h2>
+            </div>
+            <div class="timer-display">15:00</div>
+            <div class="time-adjusters">
+                <button onclick="adjustTime('orta', -30)">-30sn</button>
+                <button onclick="adjustTime('orta', 30)">+30sn</button>
+            </div>
+            <button class="action-btn" onclick="cutMetin('orta')">KESTİM!</button>
+        </div>
+
+        <div class="zone-card" id="zone-son">
+            <div class="zone-header">
+                <span class="status-indicator"></span>
+                <h2>3 - Son Bölge</h2>
+            </div>
+            <div class="timer-display">15:00</div>
+            <div class="time-adjusters">
+                <button onclick="adjustTime('son', -30)">-30sn</button>
+                <button onclick="adjustTime('son', 30)">+30sn</button>
+            </div>
+            <button class="action-btn" onclick="cutMetin('son')">KESTİM!</button>
+        </div>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
+
