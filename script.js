@@ -1,12 +1,11 @@
-const DOYUM_RESPAWN = 30 * 60 * 1000; // Doyumwhan için 30 Dakika
-const SOHAN_RESPAWN = 30 * 60 * 1000; // Sohan Dağı için 30 Dakika
+const DOYUM_RESPAWN = 30 * 60 * 1000;
+const SOHAN_RESPAWN = 30 * 60 * 1000;
 
-let currentMap = ''; // 'doyum' veya 'sohan'
+let currentMap = '';
 let currentCH = 1;
 let isAudioOpen = true;
 let wakeLock = null;
 
-// Yapılandırma Şablonları
 const mapStructures = {
     doyum: {
         title: "🔥 Doyumwhan Timers",
@@ -27,41 +26,104 @@ const mapStructures = {
 };
 
 document.addEventListener("DOMContentLoaded", () => {
-    // Sayfa yüklendiğinde hafızayı hazırla
     initStorage();
-    // Ana zamanlayıcı döngüsünü başlat
     setInterval(tick, 1000);
 });
 
-// Karşılama Ekranını Kapatıp Harita Seçimini Açma
-function dismissWelcome() {
+// FONKSİYONLARI KÜRESEL SCOPE'A BAĞLAMA (Kilitlenme ve Buton Hatasını Çözen Kısım)
+window.dismissWelcome = function() {
     document.getElementById("welcome-overlay").classList.add("hidden");
     document.getElementById("map-selector-screen").classList.remove("hidden");
-}
+};
 
-// Harita Seçildiğinde Tetiklenen Yapı
-function selectMap(mapType) {
+window.selectMap = function(mapType) {
     currentMap = mapType;
     document.getElementById("map-selector-screen").classList.add("hidden");
     document.getElementById("main-app-screen").classList.remove("hidden");
     
-    // Temaları ve Başlıkları Ayarla
     document.body.className = "metin2-core theme-" + mapType;
     document.getElementById("current-map-title").textContent = mapStructures[mapType].title;
     
-    // Arayüzü İnşa Et
     buildTimersUI();
-    switchCH(1);
-}
+    window.switchCH(1);
+};
 
-// Harita Seçimine Geri Dönme
-function goBackToMaps() {
+window.goBackToMaps = function() {
     document.getElementById("main-app-screen").classList.add("hidden");
     document.getElementById("map-selector-screen").classList.remove("hidden");
     document.body.className = "metin2-core";
-}
+};
 
-// Hafızada eksik kanal/bölge alanı kalmamasını sağlayan yapı
+window.switchCH = function(chNum) {
+    currentCH = chNum;
+    document.querySelectorAll(".ch-btn").forEach((btn, index) => {
+        if (index === chNum - 1) btn.classList.add("active");
+        else btn.classList.remove("active");
+    });
+    updateActiveTimersDisplay();
+};
+
+window.cutSlotMetin = function(zoneId, slotId) {
+    const respawnDuration = mapStructures[currentMap].respawn;
+    const targetTime = Date.now() + respawnDuration;
+    localStorage.setItem(`${currentMap}_ch${currentCH}_${zoneId}_${slotId}`, targetTime);
+    updateActiveTimersDisplay();
+    renderDashboard();
+};
+
+window.adjustSlotTime = function(zoneId, slotId, seconds) {
+    const key = `${currentMap}_ch${currentCH}_${zoneId}_${slotId}`;
+    let targetTime = parseInt(localStorage.getItem(key)) || 0;
+    
+    if (targetTime > Date.now()) {
+        targetTime += (seconds * 1000);
+        localStorage.setItem(key, targetTime);
+        updateActiveTimersDisplay();
+        renderDashboard();
+    }
+};
+
+window.toggleWakeLock = async function() {
+    const btn = document.getElementById("btn-wakelock");
+    if (!wakeLock) {
+        try {
+            if ('wakeLock' in navigator) {
+                wakeLock = await navigator.wakeLock.request('screen');
+                btn.textContent = "👁️ Ekran Uyanık";
+                btn.classList.add("active-lock");
+                
+                wakeLock.addEventListener('release', () => {
+                    wakeLock = null;
+                    btn.textContent = "👁️ Ekranı Uyanık Tut";
+                    btn.classList.remove("active-lock");
+                });
+            } else {
+                alert("Wake Lock bu tarayıcıda desteklenmiyor.");
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    } else {
+        wakeLock.release();
+        wakeLock = null;
+    }
+};
+
+window.toggleAudio = function() {
+    isAudioOpen = !isAudioOpen;
+    document.getElementById("btn-audio").textContent = isAudioOpen ? "🔊 Ses Açık" : "🔇 Ses Kapalı";
+};
+
+window.requestNotificationPermission = function() {
+    if (!("Notification" in window)) return;
+    Notification.requestPermission().then(permission => {
+        if (permission === "granted") {
+            document.getElementById("btn-noti").textContent = "🔔 Aktif";
+        }
+    });
+};
+
+// İÇ MOTOR FONKSİYONLARI
 function initStorage() {
     ['doyum', 'sohan'].forEach(map => {
         const structure = mapStructures[map];
@@ -78,10 +140,9 @@ function initStorage() {
     });
 }
 
-// Aktif Kanala Göre Arayüzdeki HTML Elemanlarını Basma
 function buildTimersUI() {
     const container = document.getElementById("timers-container");
-    container.innerHTML = ""; // İçeriği temizle
+    container.innerHTML = "";
     
     const structure = mapStructures[currentMap];
     
@@ -114,39 +175,6 @@ function buildTimersUI() {
     });
 }
 
-// Kanal Değiştirme Fonksiyonu
-function switchCH(chNum) {
-    currentCH = chNum;
-    document.querySelectorAll(".ch-btn").forEach((btn, index) => {
-        if (index === chNum - 1) btn.classList.add("active");
-        else btn.classList.remove("active");
-    });
-    updateActiveTimersDisplay();
-}
-
-// Metin Kestim Buton Tetikleyicisi
-function cutSlotMetin(zoneId, slotId) {
-    const respawnDuration = mapStructures[currentMap].respawn;
-    const targetTime = Date.now() + respawnDuration;
-    localStorage.setItem(`${currentMap}_ch${currentCH}_${zoneId}_${slotId}`, targetTime);
-    updateActiveTimersDisplay();
-    renderDashboard();
-}
-
-// Süreyi Esnetme Buton Tetikleyicisi (+/- 30 saniye)
-function adjustSlotTime(zoneId, slotId, seconds) {
-    const key = `${currentMap}_ch${currentCH}_${zoneId}_${slotId}`;
-    let targetTime = parseInt(localStorage.getItem(key)) || 0;
-    
-    if (targetTime > Date.now()) {
-        targetTime += (seconds * 1000);
-        localStorage.setItem(key, targetTime);
-        updateActiveTimersDisplay();
-        renderDashboard();
-    }
-}
-
-// Saniyede bir çalışan ana motor
 function tick() {
     if (!currentMap) return;
     updateActiveTimersDisplay();
@@ -154,7 +182,6 @@ function tick() {
     checkGlobalAlerts();
 }
 
-// Aktif Ekrandaki Sayaçları Güncel Tutma
 function updateActiveTimersDisplay() {
     const now = Date.now();
     const structure = mapStructures[currentMap];
@@ -183,7 +210,6 @@ function updateActiveTimersDisplay() {
     });
 }
 
-// GENEL DURUM PANAROMASI (DASHBOARD GENERATOR)
 function renderDashboard() {
     const dashGrid = document.getElementById("dashboard-grid");
     if (!dashGrid || !currentMap) return;
@@ -201,16 +227,14 @@ function renderDashboard() {
                 const targetTime = parseInt(localStorage.getItem(key)) || 0;
                 const remaining = targetTime - now;
                 
-                // Kısa isim formatı
                 let shortZoneName = zone.id === 'kirmizigiris' ? '' : (zone.id === 'isinlayici' ? 'Işın' : zone.id === 'orta' ? 'Orta' : 'Son');
                 let displayName = `${shortZoneName} ${slot.name.replace('Metin ', '')}`;
-                if(currentMap === 'sohan') displayName = slot.name; // Şeytan M. veya Ölüm M.
+                if(currentMap === 'sohan') displayName = slot.name;
                 
                 if (remaining > 0) {
                     const mins = Math.floor(remaining / 60000);
                     const secs = Math.floor((remaining % 60000) / 1000);
-                    const timeStr = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-                    badgesHtml += `<span class="dash-badge cooldown">${displayName}: ${timeStr}</span>`;
+                    badgesHtml += `<span class="dash-badge cooldown">${displayName}: ${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}</span>`;
                 } else {
                     badgesHtml += `<span class="dash-badge ready">${displayName}: HAZIR</span>`;
                 }
@@ -228,7 +252,6 @@ function renderDashboard() {
     dashGrid.innerHTML = html;
 }
 
-// Tüm Kanalları Tarayıp Alarm Zamanı Gelenleri Yakalama
 function checkGlobalAlerts() {
     const now = Date.now();
     const structure = mapStructures[currentMap];
@@ -240,7 +263,7 @@ function checkGlobalAlerts() {
                 const targetTime = parseInt(localStorage.getItem(key)) || 0;
                 
                 if (targetTime > 0 && now >= targetTime) {
-                    localStorage.setItem(key, "0"); // Çift alarm çalmasını engellemek için sıfırla
+                    localStorage.setItem(key, "0");
                     triggerAlert(ch, zone.name, slot.name);
                 }
             });
@@ -248,7 +271,6 @@ function checkGlobalAlerts() {
     }
 }
 
-// Bildirim ve Ses Tetikleyicisi
 function triggerAlert(ch, zoneName, slotName) {
     const mapLabel = currentMap === 'doyum' ? 'Doyumwhan' : 'Sohan Dağı';
     const msg = `${mapLabel} CH${ch} - ${zoneName} (${slotName}) Hazır!`;
@@ -262,7 +284,6 @@ function triggerAlert(ch, zoneName, slotName) {
     }
 }
 
-// Bip Sesi Üretici
 function playM2Beep() {
     try {
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -281,43 +302,3 @@ function playM2Beep() {
         });
     } catch (e) { console.log(e); }
 }
-
-// WAKE LOCK API ENTEGRASYONU (Ekranın Kapanmasını Engelleme)
-async function toggleWakeLock() {
-    const btn = document.getElementById("btn-wakelock");
-    if (!wakeLock) {
-        try {
-            if ('wakeLock' in navigator) {
-                wakeLock = await navigator.wakeLock.request('screen');
-                btn.textContent = "👁️ Ekran Uyanık";
-                btn.classList.add("active-lock");
-                
-                wakeLock.addEventListener('release', () => {
-                    wakeLock = null;
-                    btn.textContent = "👁️ Ekranı Uyanık Tut";
-                    btn.classList.remove("active-lock");
-                });
-            } else {
-                alert("Wake Lock özelliği bu tarayıcıda desteklenmiyor.");
-            }
-        } catch (err) {
-            console.error(err);
-        }
-    } else {
-        wakeLock.release();
-        wakeLock = null;
-    }
-}
-
-// Yardımcı Kontrol Fonksiyonları (Ses & İzin)
-function toggleAudio() {
-    isAudioOpen = !isAudioOpen;
-    document.getElementById("btn-audio").textContent = isAudioOpen ? "🔊 Ses Açık" : "🔇 Ses Kapalı";
-}
-
-function requestNotificationPermission() {
-    if (!("Notification" in window)) return;
-    Notification.requestPermission().then(permission => {
-        if (permission === "granted") {
-            document.getElementById("btn-noti").textContent = "🔔 Aktif";
-        
