@@ -1,21 +1,29 @@
-// HARİTA VE COOLDOWN VERİ YAPISI
+// BÖLGE VE ÇİFT METİN AYARLI VERİ YAPISI
 const mapData = {
     sohan: {
         label: "Sohan Dağı",
         cooldown: 45 * 60, // 45 Dakika
         slots: [
-            { id: "kr_giriş", name: "Kırmızı Giriş" },
-            { id: "mavi_giriş", name: "Mavi Giriş" },
-            { id: "orta_bölge", name: "Harita Ortası" }
+            { id: "kr_isinlayici_1", name: "Kırmızı B. Işınlayıcı - Metin 1" },
+            { id: "kr_isinlayici_2", name: "Kırmızı B. Işınlayıcı - Metin 2" },
+            { id: "orta_1", name: "Orta Bölge - Metin 1" },
+            { id: "orta_2", name: "Orta Bölge - Metin 2" },
+            { id: "sari_isinlayici_1", name: "Sarı B. Işınlayıcı - Metin 1" },
+            { id: "sari_isinlayici_2", name: "Sarı B. Işınlayıcı - Metin 2" },
+            { id: "portal_1", name: "Portal Bölgesi - Metin 1" },
+            { id: "portal_2", name: "Portal Bölgesi - Metin 2" }
         ]
     },
     doyum: {
         label: "Doyumwhan",
         cooldown: 60 * 60, // 60 Dakika
         slots: [
-            { id: "orta_metin", name: "Çorak Orta" },
-            { id: "sağ_bölge", name: "Işınlayıcı Çevresi" },
-            { id: "sol_alt", name: "Kırmızı Ejderha Kalesi Önü" }
+            { id: "kr_isinlayici_1", name: "Kırmızı B. Işınlayıcı - Metin 1" },
+            { id: "kr_isinlayici_2", name: "Kırmızı B. Işınlayıcı - Metin 2" },
+            { id: "orta_1", name: "Orta Bölge - Metin 1" },
+            { id: "orta_2", name: "Orta Bölge - Metin 2" },
+            { id: "son_1", name: "Son Bölge - Metin 1" },
+            { id: "son_2", name: "Son Bölge - Metin 2" }
         ]
     }
 };
@@ -33,7 +41,7 @@ const wakeLockStatus = document.getElementById("wakelock-status");
 const channelsContainer = document.getElementById("channels-container");
 const generalDashboard = document.getElementById("general-dashboard");
 
-// BAŞLANGIÇ ÇALIŞTIRMASI
+// BAŞLANGIÇ TETİKLEMESİ
 init();
 
 function init() {
@@ -55,54 +63,31 @@ function setupEventListeners() {
         isAudioOpen = e.target.checked;
     });
 
-    // Kullanıcı ekrana dokunduğunda Wake Lock'u canlandır
     document.addEventListener("click", activateWakeLock);
 }
 
-// BROWSER BİLDİRİM İZNİ
+// BROWSER PLAN BİLDİRİM İZNİ (Arka planda çalışması için kritik)
 function requestNotificationPermission() {
     if ("Notification" in window && Notification.permission === "default") {
         Notification.requestPermission();
     }
 }
 
-// SENTEZLENMİŞ METIN2 BEEP SESİ (Harici dosya gerektirmez)
-function playM2Beep() {
-    try {
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+// TÜRKÇE SESLİ KONUŞMA UYARISI (Web Speech API)
+function playVoiceAlert() {
+    if ('speechSynthesis' in window) {
+        // Devam eden diğer konuşmalar varsa temizle (üst üste binmesin)
+        window.speechSynthesis.cancel(); 
         
-        // 1. Nota (Tiz)
-        const osc1 = audioCtx.createOscillator();
-        const gain1 = audioCtx.createGain();
-        osc1.type = "sine";
-        osc1.frequency.setValueAtTime(880, audioCtx.currentTime); // A5 Notası
-        gain1.gain.setValueAtTime(0.1, audioCtx.currentTime);
-        gain1.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.15);
-        osc1.connect(gain1);
-        gain1.connect(audioCtx.destination);
-        osc1.start();
-        osc1.stop(audioCtx.currentTime + 0.15);
-
-        // 2. Nota (Milisaniyeler sonra hafif pes)
-        setTimeout(() => {
-            const osc2 = audioCtx.createOscillator();
-            const gain2 = audioCtx.createGain();
-            osc2.type = "sine";
-            osc2.frequency.setValueAtTime(1200, audioCtx.currentTime);
-            gain2.gain.setValueAtTime(0.1, audioCtx.currentTime);
-            gain2.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.2);
-            osc2.connect(gain2);
-            gain2.connect(audioCtx.destination);
-            osc2.start();
-            osc2.stop(audioCtx.currentTime + 0.2);
-        }, 80);
-
-    } catch (e) {
-        console.log("Ses çalınamadı, etkileşim bekleniyor.");
+        const utterance = new SpeechSynthesisUtterance("Metin Süresi gelmiştir Kontrol Ediniz");
+        utterance.lang = "tr-TR";
+        utterance.rate = 1.0; // Konuşma hızı
+        utterance.pitch = 1.0;
+        window.speechSynthesis.speak(utterance);
     }
 }
 
-// ANDROID EKRAN KARARMA ENGELLEYİCİ (WAKE LOCK)
+// ANDROID EKRAN KORUYUCU ENGELLEYİCİ
 async function activateWakeLock() {
     if ('wakeLock' in navigator && wakeLock === null) {
         try {
@@ -116,37 +101,33 @@ async function activateWakeLock() {
                 wakeLockStatus.className = "status-badge status-off";
             });
         } catch (err) {
-            console.log(`Wake Lock Hatası: ${err.message}`);
+            console.log(`Wake Lock Devre Dışı: ${err.message}`);
         }
     }
 }
 
-// LOCALSTORAGE YÜKLEME VE KAYDETME
 function loadTimers() {
-    const saved = localStorage.getItem("gomidas_kirbach_timers");
+    const saved = localStorage.getItem("gomidas_kirbach_v2_timers");
     if (saved) {
         timers = JSON.parse(saved);
     }
 }
 
 function saveTimers() {
-    localStorage.setItem("gomidas_kirbach_timers", JSON.stringify(timers));
+    localStorage.setItem("gomidas_kirbach_v2_timers", JSON.stringify(timers));
 }
 
-// KESTİM BUTONU TETİKLEYİCİSİ
 window.handleSlotClick = function(ch, slotId) {
     const timerKey = `${currentMap}_CH${ch}_${slotId}`;
     const now = Math.floor(Date.now() / 1000);
     const cdSeconds = mapData[currentMap].cooldown;
 
     if (!timers[timerKey] || now >= timers[timerKey].targetTime) {
-        // Geri sayım başlat
         timers[timerKey] = {
             targetTime: now + cdSeconds,
             notified: false
         };
     } else {
-        // Süre bitmeden basılırsa sayacı sıfırla/iptal et
         delete timers[timerKey];
     }
 
@@ -154,12 +135,10 @@ window.handleSlotClick = function(ch, slotId) {
     renderUI();
 };
 
-// ARAYÜZÜ ÇİZME (DYNAMIC RENDERING)
 function renderUI() {
     const currentMapInfo = mapData[currentMap];
-    
-    // 1. CH Kartlarını Oluştur
     let channelsHtml = "";
+
     CHANNELS.forEach(ch => {
         let slotsHtml = "";
         currentMapInfo.slots.forEach(slot => {
@@ -189,8 +168,6 @@ function renderUI() {
         `;
     });
     channelsContainer.innerHTML = channelsHtml;
-
-    // 2. Genel Durum Panelini Güncelle
     renderDashboard();
 }
 
@@ -204,9 +181,12 @@ function renderDashboard() {
             const timerState = getTimerState(timerKey);
             const isReady = !timerState.isCounting;
 
+            // Dashboard'da isimlerin sığması için kısa gösterim
+            const shortName = slot.name.replace(" - Metin", " M");
+
             dashHtml += `
                 <div class="dash-item ${isReady ? 'ready' : ''}">
-                    <span>CH${ch} - ${slot.name.substring(0,6)}..</span>
+                    <span>CH${ch} - ${shortName}</span>
                     <strong>${timerState.text}</strong>
                 </div>
             `;
@@ -226,38 +206,32 @@ function getTimerState(timerKey) {
     const remaining = timer.targetTime - now;
     const minutes = Math.floor(remaining / 60);
     const seconds = remaining % 60;
-    const formattedTime = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
-
-    return { text: formattedTime, isCounting: true };
+    return { text: `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`, isCounting: true };
 }
 
-// GLOBAL DÖNGÜ (HER SANİYE ÇALIŞIR)
+// ARKA PLAN VE SÜREKLİ TAKİP SAATİ
 function startGlobalClock() {
     setInterval(() => {
         const now = Math.floor(Date.now() / 1000);
-        let statusChanged = false;
 
-        // Zamanlayıcıları kontrol et ve bitenleri tetikle
         for (const timerKey in timers) {
             const timer = timers[timerKey];
             if (now >= timer.targetTime && !timer.notified) {
                 timer.notified = true;
                 
-                // Hangi harita, ch ve slot olduğunu key'den ayrıştırıyoruz
                 const parts = timerKey.split("_");
                 const mapId = parts[0];
                 const ch = parts[1].replace("CH", "");
-                // Slot id'si birden fazla alt tire içerebilir, kalan kısmı birleştiriyoruz
                 const slotId = parts.slice(2).join("_"); 
 
                 const zoneLabel = mapData[mapId].slots.find(s => s.id === slotId)?.name || "Bilinmeyen Bölge";
                 
+                // Alarmı Tetikle
                 triggerAlert(ch, zoneLabel, mapData[mapId].label);
-                statusChanged = true;
             }
         }
 
-        // Saniyede bir süreleri güncelle (Arayüze yansıt)
+        // DOM Süre Güncellemeleri
         const currentMapInfo = mapData[currentMap];
         CHANNELS.forEach(ch => {
             currentMapInfo.slots.forEach(slot => {
@@ -275,31 +249,32 @@ function startGlobalClock() {
             });
         });
 
-        // Her saniye dashboard'u da hafifçe tazele
         renderDashboard();
-
     }, 1000);
 }
 
-// BİLDİRİM VE UYARI TETİKLEYİCİSİ
+// BİLDİRİM VE SES YÖNETİMİ
 function triggerAlert(ch, zoneName, mapLabel) {
-    const msg = `${mapLabel} CH${ch} - ${zoneName} KESİLEBİLİR!`;
+    const msg = `${mapLabel} CH${ch} - ${zoneName} ZAMANI!`;
     
-    // 1. Sesli Uyarı
+    // 1. Türkçe Sesli Konuşma Tetikleyici
     if (isAudioOpen) {
-        playM2Beep();
+        playVoiceAlert();
     }
     
-    // 2. EKRANDA GÖSTERİM (Yeni Eklenen Sistem)
+    // 2. Ön Plan Bildirimi (Açık Ekran)
     showOnScreenNotification(msg);
     
-    // 3. Tarayıcı Arka Plan Bildirimi (Açıksa)
+    // 3. ARKA PLAN BİLDİRİMİ (Site aşağı alındığında işletim sistemi seviyesinde fırlar)
     if (Notification.permission === "granted") {
-        new Notification("Metin Hazır!", { body: msg });
+        new Notification("⚔️ METİN SÜRESİ GELDİ!", {
+            body: `${mapLabel} CH${ch} - ${zoneName} doğmuş olabilir, kontrol ediniz.`,
+            tag: "m2-farm-alert", // Aynı bildirimlerin üst üste yığılmasını önler
+            requireInteraction: true // Kullanıcı kapatana kadar ekranda kalır
+        });
     }
 }
 
-// TOAST ALERT OLUŞTURUCU
 function showOnScreenNotification(message) {
     let container = document.getElementById("toast-container");
     if (!container) {
@@ -317,10 +292,9 @@ function showOnScreenNotification(message) {
     
     container.appendChild(toast);
     
-    // 8 saniye sonra ekrandan otomatik silinir
     setTimeout(() => {
         if (toast.parentElement) {
             toast.remove();
         }
-    }, 8000);
-        }
+    }, 10000); // Ekran bildirimi 10 saniye kalır
+}
