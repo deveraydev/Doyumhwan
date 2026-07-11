@@ -3,73 +3,61 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mobile2 Doyumwhan Metin Sayacı</title>
+    <title>Gomidas Farm Assistant</title>
     <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body class="metin2-core">
 
-    <header>
-        <div class="header-title">
-            <h1>Doyumwhan Timers</h1>
-            <span class="sub-title">Shinsoo (Kırmızı Bayrak) Bölgesi</span>
+    <div id="welcome-overlay" class="overlay">
+        <div class="welcome-box">
+            <div class="m2-logo-emulation">METIN2 FARM</div>
+            <p class="credits-text">" Gomidas tarafından Yazıldı, iyi farmlayın diye. "</p>
+            <button id="btn-thanks" class="m2-btn gold" onclick="dismissWelcome()">Teşekkürler</button>
         </div>
-        <div class="controls">
-            <button id="btn-audio" class="control-btn" onclick="toggleAudio()">🔊 Ses Açık</button>
-            <button id="btn-noti" class="control-btn" onclick="requestNotificationPermission()">🔔 Bildirim İzni</button>
-        </div>
-    </header>
+    </div>
 
-    <nav class="ch-nav">
-        <button class="ch-btn active" onclick="switchCH(1)">CH 1</button>
-        <button class="ch-btn" onclick="switchCH(2)">CH 2</button>
-        <button class="ch-btn" onclick="switchCH(3)">CH 3</button>
-        <button class="ch-btn" onclick="switchCH(4)">CH 4</button>
-        <button class="ch-btn" onclick="switchCH(5)">CH 5</button>
-        <button class="ch-btn" onclick="switchCH(6)">CH 6</button>
-    </nav>
-
-    <main class="zones-container">
-        <div class="zone-card" id="zone-isinlayici">
-            <div class="zone-header">
-                <span class="status-indicator"></span>
-                <h2>1 - Işınlayıcı</h2>
+    <div id="map-selector-screen" class="hidden">
+        <div class="selector-box">
+            <h2>Nerede Farm yapacaksın güzel kardeşim?</h2>
+            <div class="map-buttons">
+                <button class="map-select-btn doyum-btn" onclick="selectMap('doyum')">🔥 Doyumwhan (30 dk)</button>
+                <button class="map-select-btn sohan-btn" onclick="selectMap('sohan')">❄️ Sohan Dağı (30 dk)</button>
             </div>
-            <div class="timer-display">15:00</div>
-            <div class="time-adjusters">
-                <button onclick="adjustTime('isinlayici', -30)">-30sn</button>
-                <button onclick="adjustTime('isinlayici', 30)">+30sn</button>
-            </div>
-            <button class="action-btn" onclick="cutMetin('isinlayici')">KESTİM!</button>
         </div>
+    </div>
 
-        <div class="zone-card" id="zone-orta">
-            <div class="zone-header">
-                <span class="status-indicator"></span>
-                <h2>2 - Orta Bölge</h2>
+    <div id="main-app-screen" class="hidden">
+        <header>
+            <div class="header-left">
+                <button class="m2-btn back-btn" onclick="goBackToMaps()">⬅ Harita Seçimi</button>
+                <h1 id="current-map-title">Harita Adı</h1>
             </div>
-            <div class="timer-display">15:00</div>
-            <div class="time-adjusters">
-                <button onclick="adjustTime('orta', -30)">-30sn</button>
-                <button onclick="adjustTime('orta', 30)">+30sn</button>
+            <div class="system-controls">
+                <button id="btn-wakelock" class="control-btn" onclick="toggleWakeLock()">👁️ Ekranı Uyanık Tut</button>
+                <button id="btn-audio" class="control-btn" onclick="toggleAudio()">🔊 Ses Açık</button>
+                <button id="btn-noti" class="control-btn" onclick="requestNotificationPermission()">🔔 Bildirim</button>
             </div>
-            <button class="action-btn" onclick="cutMetin('orta')">KESTİM!</button>
-        </div>
+        </header>
 
-        <div class="zone-card" id="zone-son">
-            <div class="zone-header">
-                <span class="status-indicator"></span>
-                <h2>3 - Son Bölge</h2>
-            </div>
-            <div class="timer-display">15:00</div>
-            <div class="time-adjusters">
-                <button onclick="adjustTime('son', -30)">-30sn</button>
-                <button onclick="adjustTime('son', 30)">+30sn</button>
-            </div>
-            <button class="action-btn" onclick="cutMetin('son')">KESTİM!</button>
-        </div>
-    </main>
+        <section class="dashboard-section">
+            <h3>📊 Genel Durum Paneli</h3>
+            <div id="dashboard-grid" class="dashboard-grid">
+                </div>
+        </section>
+
+        <nav class="ch-nav">
+            <button class="ch-btn active" onclick="switchCH(1)">CH 1</button>
+            <button class="ch-btn" onclick="switchCH(2)">CH 2</button>
+            <button class="ch-btn" onclick="switchCH(3)">CH 3</button>
+            <button class="ch-btn" onclick="switchCH(4)">CH 4</button>
+            <button class="ch-btn" onclick="switchCH(5)">CH 5</button>
+            <button class="ch-btn" onclick="switchCH(6)">CH 6</button>
+        </nav>
+
+        <main id="timers-container">
+            </main>
+    </div>
 
     <script src="script.js"></script>
 </body>
 </html>
-
